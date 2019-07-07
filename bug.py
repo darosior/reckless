@@ -13,7 +13,8 @@ from descriptions import (
 from pylightning import Plugin
 from search import search_github
 from utils import (
-    create_dir, get_main_file, dl_folder_from_github, make_executable
+    create_dir, get_main_file, dl_folder_from_github, make_executable,
+    dl_github_repo
 )
 
 
@@ -56,6 +57,9 @@ def install(plugin, url, main_file=None, install_dir=None):
     # A special case to handle repositories with many plugins as folders
     if "api.github.com" in url and len(res_name.split('.')) == 1:
         dl_folder_from_github(install_path, url)
+    elif "github.com" in url:
+        # A Github url, but not the api. Must be a repo.
+        dl_github_repo(install_path, url)
     else:
         urllib.request.urlretrieve(url, file_path)
     response.append("Downloaded file from {} to {}".format(url, file_path))
