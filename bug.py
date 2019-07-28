@@ -45,6 +45,22 @@ def install(plugin, url, main_file=None, install_dir=None):
     """
     # We use the command return to give an output to the user
     response = ["===== Installation result ======", ""]
+    # First of all, check that we have been given a supported url
+    if url.split("://")[0] not in {"http", "https"}:
+        response.append("You did not pass a valid url, treating as a keyword")
+        search_result = search(plugin, url)
+        if search_result:
+            response.append("You can install {} by running :".format(url))
+            response.append("lightning-cli install {}"
+                            .format(search_result[0]["url_download"]))
+            if len(search_result) > 1:
+                response.append("You can also install it via :")
+                response.append(", ".join(r["url_download"]
+                                          for r in search_result))
+        else:
+            response.append("No known plugin was found matching {}"
+                            .format(url))
+        return response
     res_name = urllib.parse.urlparse(url).path.split('/')[-1]
     if not install_dir:
         install_dir = res_name.split('.')[0]
@@ -62,7 +78,9 @@ def install(plugin, url, main_file=None, install_dir=None):
         dl_github_repo(install_path, url)
     else:
         urllib.request.urlretrieve(url, file_path)
-    response.append("Downloaded file from {} to {}".format(url, file_path))
+    # Separated because url and path can be long
+    response.append("Downloaded file from {} ..".format(url))
+    response.append(".. to {}".format(file_path))
     # If the file has been urlretrieved, it's wether an archive or a single
     # file
     if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
