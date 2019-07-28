@@ -8,6 +8,9 @@ install_long_description = \
         This command will, if provided an url, fetch the resource and add it in
         the default plugins directory. It will then try to find the main file
         and load it as a plugin.\n
+        In addition to (optionally archive) files, the command can be passed a
+        Github repo. If you want to download a specific folder from a Github
+        repo, please use the 'search' command with the folder name.\n
         This command will, if provided a keyword, scrap known C-lightning
         plugins repositories and return url of matching ones. It __will not__
         install it by default.\n

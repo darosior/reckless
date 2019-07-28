@@ -44,7 +44,7 @@ def install(plugin, url, main_file=None, install_dir=None):
                 default plugins directory.
     """
     # We use the command return to give an output to the user
-    response = ["===== Installation result ======"]
+    response = ["===== Installation result ======", ""]
     res_name = urllib.parse.urlparse(url).path.split('/')[-1]
     if not install_dir:
         install_dir = res_name.split('.')[0]
@@ -86,16 +86,16 @@ def install(plugin, url, main_file=None, install_dir=None):
         response.append("Making {} executable".format(main_file))
         make_executable(os.path.join(install_path, main_file))
     else:
-        response.append("Could not find a main file, hence not making anything\
-                        executable")
-    plugin.rpc.plugin(command="reload")
+        response.append("Could not find a main file, hence not making anything"
+                        "executable")
+    plugin.rpc.plugin_rescan()
     response.append("Reloaded plugins from lightningd")
-    response.append("Waiting for a second to check if the brand new plugin\
-                     has been loaded")
+    response.append("Waiting for a second to check if the brand new plugin"
+                    "has been loaded")
     time.sleep(1)
-    active_plugins = plugin.rpc.plugin(command="list")
+    active_plugins = plugin.rpc.plugin_list()["plugins"]
     response.append("Active plugins : "
-                    + ", ".join(p.split('/')[-1] for p in active_plugins))
+                    + ", ".join(p["name"].split('/')[-1] for p in active_plugins))
     return response
 
 
