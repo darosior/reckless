@@ -714,14 +714,48 @@ class LightningRpc(UnixDomainSocketRpc):
         }
         return self.call("ping", payload)
 
-    def plugin(self, command=None, parameter=None, second_parameter=None):
+    def plugin_start(self, plugin):
         """
-        Manage plugins.
+        Adds a plugin to lightningd.
         """
         payload = {
-            "command": command,
-            "parameter": parameter,
-            "second_parameter": second_parameter
+            "subcommand": "start",
+            "plugin": plugin
+        }
+        return self.call("plugin", payload)
+
+    def plugin_startdir(self, directory):
+        """
+        Adds all plugins from a directory to lightningd.
+        """
+        payload = {
+            "subcommand": "startdir",
+            "directory": directory
+        }
+        return self.call("plugin", payload)
+
+    def plugin_stop(self, plugin):
+        """
+        Stops a lightningd plugin, will fail if plugin is not dynamic.
+        """
+        payload = {
+            "subcommand": "stop",
+            "plugin": plugin
+        }
+        return self.call("plugin", payload)
+
+    def plugin_list(self):
+        """
+        Lists all plugins lightningd knows about.
+        """
+        payload = {
+            "subcommand": "list"
+        }
+        return self.call("plugin", payload)
+
+    def plugin_rescan(self):
+        payload = {
+            "subcommand": "rescan"
         }
         return self.call("plugin", payload)
 
