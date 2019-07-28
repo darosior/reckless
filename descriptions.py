@@ -10,7 +10,7 @@ install_long_description = \
         and load it as a plugin.\n
         In addition to (optionally archive) files, the command can be passed a
         Github repo. If you want to download a specific folder from a Github
-        repo, please use the 'search' command with the folder name.\n
+        repo, please use the 'search_plugin' command with the folder name.\n
         This command will, if provided a keyword, scrap known C-lightning
         plugins repositories and return url of matching ones. It __will not__
         install it by default.\n
@@ -30,6 +30,6 @@ search_long_description = \
         It will return a json object for each match, containing 2 entries:\n
         - 'url_human': An url pointing to a webpage so that you can
           double-check what you are installing.\n
-        - 'url_download': The url to provide to the `install` command to
+        - 'url_download': The url to provide to the `install_plugin` command to
           install the actual plugin\n
         """

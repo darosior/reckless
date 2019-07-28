@@ -30,7 +30,7 @@ def init(plugin, options, configuration):
                .format(plugin.plugins_path))
 
 
-@plugin.method("install", desc=install_description,
+@plugin.method("install_plugin", desc=install_description,
                long_desc=install_long_description)
 def install(plugin, url, main_file=None, install_dir=None):
     """
@@ -51,12 +51,12 @@ def install(plugin, url, main_file=None, install_dir=None):
         search_result = search(plugin, url)
         if search_result:
             response.append("You can install {} by running :".format(url))
-            response.append("lightning-cli install {}"
+            response.append("lightning-cli install_plugin {}"
                             .format(search_result[0]["url_download"]))
             if len(search_result) > 1:
                 response.append("You can also install it via :")
                 response.append(", ".join(r["url_download"]
-                                          for r in search_result))
+                                          for r in search_result[1:]))
         else:
             response.append("No known plugin was found matching {}"
                             .format(url))
@@ -117,7 +117,8 @@ def install(plugin, url, main_file=None, install_dir=None):
     return response
 
 
-@plugin.method("search", desc=search_description, long_desc=search_long_description)
+@plugin.method("search_plugin", desc=search_description,
+               long_desc=search_long_description)
 def search(plugin, keyword):
     """
     Search for a plugin url in known plugin repositories.
