@@ -66,7 +66,7 @@ def install(plugin, url, main_file=None, install_dir=None):
         install_dir = res_name.split('.')[0]
     install_path = os.path.join(plugin.plugins_path, install_dir)
     create_dir(install_path)
-    response.append("Created {} directory ..".format(install_path))
+    response.append("Created {} directory".format(install_path))
     file_path = os.path.join(install_path, res_name)
     if os.path.exists(file_path):
         return "Destination {} already exists".format(file_path)
@@ -106,9 +106,10 @@ def install(plugin, url, main_file=None, install_dir=None):
     else:
         response.append("Could not find a main file, hence not making anything"
                         "executable")
+        return response
     # The common case where the plugin is in Python and has dependencies
     handle_requirements(install_path)
-    plugin.rpc.plugin_rescan()
+    plugin.rpc.plugin_start(os.path.abspath(main_file))
     response.append("Reloaded plugins from lightningd")
     response.append("Waiting for a second to check if the brand new plugin"
                     " has been loaded")
