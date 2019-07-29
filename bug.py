@@ -14,7 +14,7 @@ from pylightning import Plugin
 from search import search_github
 from utils import (
     create_dir, get_main_file, dl_folder_from_github, make_executable,
-    dl_github_repo
+    dl_github_repo, handle_requirements
 )
 
 
@@ -102,15 +102,17 @@ def install(plugin, url, main_file=None, install_dir=None):
     # We might not have found the main_file...
     if main_file:
         response.append("Making {} executable".format(main_file))
-        make_executable(os.path.join(install_path, main_file))
+        make_executable(main_file)
     else:
         response.append("Could not find a main file, hence not making anything"
                         "executable")
+    # The common case where the plugin is in Python and has dependencies
+    handle_requirements(install_path)
     plugin.rpc.plugin_rescan()
     response.append("Reloaded plugins from lightningd")
     response.append("Waiting for a second to check if the brand new plugin"
-                    "has been loaded")
-    time.sleep(1)
+                    " has been loaded")
+    time.sleep(2)
     active_plugins = plugin.rpc.plugin_list()["plugins"]
     response.append("Active plugins : "
                     + ", ".join(p["name"].split('/')[-1] for p in active_plugins))

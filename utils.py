@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import stat
+import sys
 import urllib.request
 import zipfile
 
@@ -102,3 +103,23 @@ def dl_folder_from_github(install_path, url):
         if "submodule_git_url" in i:
             dl_github_repo(os.path.join(install_path, i["name"]),
                            json_content["submodule_git_url"])
+
+
+def handle_requirements(directory):
+    """
+    Handles the 'pip install's if this is a Python plugin (most are).
+    """
+    content = os.listdir(directory)
+    for filename in content:
+        if "requirements" in filename:
+            with open(os.path.join(directory, filename), 'r') as f:
+                for line in f:
+                    pip_install(line.rstrip('\n'))
+
+
+def pip_install(package):
+    try:
+        subprocess.check_output([sys.executable, "-m", "pip", "install", package])
+    except:
+        # Requirement already satisfied
+        pass
