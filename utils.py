@@ -1,6 +1,7 @@
 """
 Utility functions.
 """
+import importlib
 import json
 import os
 import re
@@ -9,6 +10,7 @@ import stat
 import sys
 import urllib.request
 import zipfile
+from packaging import version
 
 
 def create_dir(abs_path):
@@ -120,12 +122,34 @@ def handle_requirements(directory):
         if "requirements" in filename:
             with open(os.path.join(directory, filename), 'r') as f:
                 for line in f:
-                    pip_install(line.rstrip('\n'))
+                    # Some requirements.txt have blank lines...
+                    if line.rstrip('\n'):
+                        pip_install(line.rstrip('\n'))
 
 
 def pip_install(package):
+    """
+    'pip' install a Python package if not already installed (likely, globally
+    installed)
+    """
     try:
-        subprocess.check_output([sys.executable, "-m", "pip", "install", package])
+        package_name = package.split("==")[0]
+        subprocess.check_output([sys.executable, "-m", "pip", "show",
+                                 package_name])
+        # We did not raise, package is installed
+        if "==" in package:
+            package_version = version.parse(package.split("==")[1])
+            installed_version = version.parse(importlib.
+                                              import_module(package_name)
+                                              .__version__)
+            if package_version > installed_version:
+                # Install the new version
+                raise
     except:
-        # Requirement already satisfied
-        pass
+        # Check failed, the package is not installed
+        try:
+            subprocess.check_output([sys.executable, "-m", "pip",
+                                     "install", package])
+        except:
+            # Requirement already satisfied
+            pass

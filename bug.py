@@ -113,7 +113,7 @@ def install(plugin, url, main_file=None, install_dir=None):
     response.append("Reloaded plugins from lightningd")
     response.append("Waiting for a second to check if the brand new plugin"
                     " has been loaded")
-    time.sleep(2)
+    time.sleep(1)
     active_plugins = plugin.rpc.plugin_list()["plugins"]
     response.append("Active plugins : "
                     + ", ".join(p["name"].split('/')[-1] for p in active_plugins))
