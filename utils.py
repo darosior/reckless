@@ -56,14 +56,15 @@ def get_main_file(possible_filenames, install_path):
 
 def dl_github_repo(install_path, url):
     """
-    Downloads a whole Github repo, then delete the '.git'.
+    Downloads a whole Github repo, then delete the '.git' directory.
 
     :param install_path: Where to clone the repo.
     :param url: Repo url.
     """
+    url = url.replace(".git", "")
     # Let's download it as a zip
     dl_url = url + "archive/master.zip" if url[:-1] == '/' \
-             else url + '/' + "archive/master.zip"
+                                        else url + '/' + "archive/master.zip"
     zip_path, _ = urllib.request.urlretrieve(dl_url,
                                os.path.join(install_path, url.split("/")[-1]))
     with zipfile.ZipFile(zip_path, 'r') as zip_file:
@@ -83,7 +84,12 @@ def dl_folder_from_github(install_path, url):
     json_content = json.load(urllib.request.urlopen(url))
     if not isinstance(json_content, list):
         if "submodule_git_url" in json_content:
-            dl_github_repo(install_path, json_content["submodule_git_url"])
+            # For 'git@username:repo/' urls
+            repo_url = json_content["submodule_git_url"]
+            if "git@" in repo_url:
+                repo_url = repo_url.replace(":", "/")
+                repo_url = repo_url.replace("git@", "http://")
+            dl_github_repo(install_path, repo_url)
             return
         else:
             raise ValueError("Could not parse json: {}".format(json_content))
