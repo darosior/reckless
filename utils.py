@@ -13,6 +13,14 @@ import zipfile
 from packaging import version
 
 
+def plug_debug(line):
+    """
+    Use $PWD/debug.log as stdout for print()-debugging a plugin
+    """
+    with open(os.path.join(os.getcwd(), "debug.log"), "a") as f:
+        f.write(line)
+
+
 def create_dir(abs_path):
     """
     Creates a directory
@@ -74,6 +82,13 @@ def dl_github_repo(install_path, url):
     with zipfile.ZipFile(zip_path, 'r') as zip_file:
         zip_file.extractall(install_path)
     os.remove(zip_path)
+    # Remove extra dir (likely "<pluginname>-master")
+    if len(os.listdir(install_path)) == 1:
+        extra_dir = os.path.join(install_path, os.listdir(install_path)[0])
+        for name in os.listdir(extra_dir):
+            os.rename(os.path.join(extra_dir, name),
+                      os.path.join(install_path, name))
+        os.rmdir(extra_dir)
 
 
 def dl_folder_from_github(install_path, url):
