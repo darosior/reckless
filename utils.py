@@ -144,6 +144,33 @@ def handle_requirements(directory):
                         pip_install(line.rstrip('\n'))
 
 
+def handle_compilation(directory):
+    """
+    Handles the compilation of a GO/C/C++ plugin
+    """
+    content = os.listdir(directory)
+    for filename in [name for name in content if '.' in name]:
+        if filename.split('.')[1] == "go":
+            # Check for a Makefile otherwise `go build` it
+            for name in content:
+                if name == "Makefile":
+                    subprocess.check_output(["make"])
+                    return
+            try:
+                go_bin = os.path.abspath("go")
+                subprocess.check_output([go_bin, "build"])
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                raise Exception("Could not 'go build' the plugin, is golang"
+                                "installed ?")
+            return
+        elif filename.split('.')[1] in {"c", "cpp"}:
+            # We need a Makefile
+            for name in content:
+                if name == "Makefile":
+                    subprocess.check_output(["make"])
+                    return
+
+
 def pip_install(package):
     """
     'pip' install a Python package if not already installed (likely, globally

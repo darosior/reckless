@@ -14,7 +14,7 @@ from pylightning import Plugin
 from search import search_github
 from utils import (
     create_dir, get_main_file, dl_folder_from_github, make_executable,
-    dl_github_repo, handle_requirements
+    dl_github_repo, handle_requirements, handle_compilation, plug_debug
 )
 
 
@@ -81,7 +81,7 @@ def install(plugin, url, main_file=None, install_dir=None):
     # Separated because url and path can be long
     response.append("Downloaded file from {} ..".format(url))
     response.append(".. to {}".format(file_path))
-    # If the file has been urlretrieved, it's wether an archive or a single
+    # If the file has been urlretrieved, it's either an archive or a single
     # file
     if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
             or file_path.endswith(".zip"):
@@ -94,6 +94,10 @@ def install(plugin, url, main_file=None, install_dir=None):
             with zipfile.ZipFile(file_path, "r") as zip_file:
                 zip_file.extractall(install_path)
             os.remove(file_path)
+    # The common case where the plugin is in Python and has dependencies
+    handle_requirements(install_path)
+    # The case where the plugin is not written in a scripting language
+    handle_compilation(install_path)
     # Trying to figure out which file to set executable, otherwise we would not
     # be able to load the plugin
     possible_filenames = {file_path.split('/')[-1].split('.')[0], "main",
@@ -105,10 +109,8 @@ def install(plugin, url, main_file=None, install_dir=None):
         make_executable(main_file)
     else:
         response.append("Could not find a main file, hence not making anything"
-                        "executable")
+                        " executable")
         return response
-    # The common case where the plugin is in Python and has dependencies
-    handle_requirements(install_path)
     plugin.rpc.plugin_start(os.path.abspath(main_file))
     response.append("Reloaded plugins from lightningd")
     response.append("Waiting for a second to check if the brand new plugin"
@@ -116,7 +118,7 @@ def install(plugin, url, main_file=None, install_dir=None):
     time.sleep(1)
     active_plugins = plugin.rpc.plugin_list()["plugins"]
     response.append("Active plugins : "
-                    + ", ".join(p["name"].split('/')[-1] for p in active_plugins))
+                    ", ".join(p["name"].split('/')[-1] for p in active_plugins))
     return response
 
 
