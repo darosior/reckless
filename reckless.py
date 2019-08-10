@@ -26,7 +26,7 @@ def init(plugin, options, configuration):
     plugin.plugins_path = os.path.join(plugin.lightning_dir, "plugins")
     if "plugins-path" in configuration:
         plugin.plugins_path = configuration["plugins-path"]
-    plugin.log("Plugin bug.py initialized with {} as plugins path"
+    plugin.log("Plugin reckless.py initialized with {} as plugins path"
                .format(plugin.plugins_path))
 
 

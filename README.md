@@ -1,10 +1,10 @@
-# Bug
+# Reckless
 A plugin manager for C-lightning  
   
 ## Installation - requirements
-As any other plugin, `bug` can be installed by being put in `lightningd`'s default plugin directory or at startup via command line:
+As any other plugin, `reckless` can be installed by being put in `lightningd`'s default plugin directory (`~/.lightning/plugins` by default) or at startup via command line:
 ```bash
-lightningd --plugin /path/to/bug.py
+lightningd --plugin /path/to/reckless.py
 ```
 C-lightning v0.7.2 or master branch is required.  
 
@@ -30,16 +30,16 @@ This will output a somewhat exhaustive log of what happened (in case installatio
    "Making /home/darosior/test-dir/plugins/rebalance/rebalance.py executable",
    "Reloaded plugins from lightningd",
    "Waiting for a second to check if the brand new pluginhas been loaded",
-   "Active plugins : pay, autoclean, bug.py, rebalance.py"
+   "Active plugins : pay, autoclean, reckless.py, rebalance.py"
 ]
 ```
 *(lightning-cli escapes the `\n`s so I used a list)*  
   
-There is a little trick with installing plugins with `bug`. As you may know, they have to be executable to be usable: for now `bug` (inefficiently) tries to guess which file to make executable. It can lead to strange behaviors if it's wrong.  
+There is a little trick with installing plugins with `reckless`. As you may know, they have to be executable to be usable: for now `reckless` (inefficiently) tries to guess which file to make executable. It can lead to strange behaviors if it's wrong.  
   
 ## A note on managers
 Package managers have led to severe flaws in the past, and especially in Bitcoin space. C-lightning plugins are direclty connected to `lightningd` and manage funds, please be sure of what you are installing. That's why the installation is in two stades (`search` then `install`(only url)). That's why there is a `human_url` entry in the search results.  
-That's also why this plugin is named `bug` :-).  
+That's also why this plugin is named `reckless` :-)..  
   
 ## Licence
 BSD 3-clause-clear
