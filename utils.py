@@ -34,7 +34,6 @@ def get_main_file(possible_filenames, install_path):
     """
     content = os.listdir(install_path)
     if len(content) == 1:
-        # FIXME: shitty var name..
         tmp_file = os.path.join(install_path, content[0])
         if not os.path.isdir(tmp_file):
             # There is only one file, this is the main one !
@@ -46,10 +45,13 @@ def get_main_file(possible_filenames, install_path):
                           os.path.join(install_path, f))
             os.rmdir(tmp_file)
             content = os.listdir(install_path)
-    # Iterate through all files to check if one could be the main one
+    # Iterate through all files that are not source files of a compiled
+    # language, to check if there is the main one
     for filename in [f for f in content
-                     if os.path.isfile(os.path.join(install_path, f))]:
-        # FIXME: Should really do this with regex..
+                     if os.path.isfile(os.path.join(install_path, f))
+                     and not re.findall(r"^.*\.cpp|c|go$",
+                                        os.path.join(install_path, f))]:
+        # FIXME: Improve main file detection
         for possible_filename in possible_filenames:
             if possible_filename in filename:
                 return os.path.join(install_path, filename)
