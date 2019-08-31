@@ -43,33 +43,36 @@ def install(plugin, url, main_file=None, install_dir=None):
     :install_dir: (optional) The name of the directory to create in c-lightning's
                 default plugins directory.
     """
+    # We dont support pre-v0.7.2.1 anyway
+    reply = {"response": "", "format-hint": "simple"}
     # We use the command return to give an output to the user
-    response = ["===== Installation result ======", ""]
+    reply["response"] += "===== Installation result ======\n\n"
     # First of all, check that we have been given a supported url
     if url.split("://")[0] not in {"http", "https"}:
-        response.append("You did not pass a valid url, treating as a keyword")
+        reply["response"] += "You did not pass a valid url,"\
+                             " treating as a keyword\n"
         search_result = search(plugin, url)
         if search_result:
-            response.append("You can install {} by running :".format(url))
-            response.append("lightning-cli install_plugin {}"
-                            .format(search_result[0]["url_download"]))
+            reply["response"] += "You can install {} by running : ".format(url)
+            reply["response"] += "`lightning-cli install_plugin {}`\n"\
+                                 .format(search_result[0]["url_download"])
             if len(search_result) > 1:
-                response.append("You can also install it via :")
-                response.append(", ".join(r["url_download"]
-                                          for r in search_result[1:]))
+                reply["response"] += "You can also install it via :"
+                reply["response"] += ", ".join(r["url_download"]
+                                               for r in search_result[1:])
         else:
-            response.append("No known plugin was found matching {}"
-                            .format(url))
-        return response
+            reply["response"] += "No known plugin was found matching {}"\
+                                 .format(url)
+        return reply
     res_name = urllib.parse.urlparse(url).path.split('/')[-1]
     if not install_dir:
         install_dir = res_name.split('.')[0]
     install_path = os.path.join(plugin.plugins_path, install_dir)
     create_dir(install_path)
-    response.append("Created {} directory".format(install_path))
+    reply["response"] += "Created {} directory\n".format(install_path)
     file_path = os.path.join(install_path, res_name)
     if os.path.exists(file_path):
-        return "Destination {} already exists".format(file_path)
+        return "Destination {} already exists\n".format(file_path)
     # A special case to handle repositories with many plugins as folders
     if "api.github.com" in url and len(res_name.split('.')) == 1:
         dl_folder_from_github(install_path, url)
@@ -79,13 +82,13 @@ def install(plugin, url, main_file=None, install_dir=None):
     else:
         urllib.request.urlretrieve(url, file_path)
     # Separated because url and path can be long
-    response.append("Downloaded file from {} ..".format(url))
-    response.append(".. to {}".format(file_path))
+    reply["response"] += "Downloaded file from {} ..".format(url)
+    reply["response"] += ".. to {}\n".format(file_path)
     # If the file has been urlretrieved, it's either an archive or a single
     # file
     if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
             or file_path.endswith(".zip"):
-        response.append("Extracting the archive {}".format(res_name))
+        reply["response"] += "Extracting the archive {}\n".format(res_name)
         if file_path.endswith(".tar.gz") or file_path.endswith("tar"):
             with tarfile.open(file_path, "r:*") as tar_file:
                 tar_file.extractall(install_path)
@@ -105,21 +108,22 @@ def install(plugin, url, main_file=None, install_dir=None):
     main_file = get_main_file(possible_filenames, install_path)
     # We might not have found the main_file...
     if main_file:
-        response.append("Making {} executable".format(main_file))
+        reply["response"] += "Making {} executable\n".format(main_file)
         make_executable(main_file)
     else:
-        response.append("Could not find a main file, hence not making anything"
-                        " executable")
-        return response
+        reply["response"] += "Could not find a main file, hence not making"\
+                             " anything executable\n"
+        return reply
     plugin.rpc.plugin_start(os.path.abspath(main_file))
-    response.append("Reloaded plugins from lightningd")
-    response.append("Waiting for a second to check if the brand new plugin"
-                    " has been loaded")
+    reply["response"] += "Reloaded plugins from lightningd\n"
+    reply["response"] += "Waiting for a second to check if the brand"\
+                         " new plugin has been loaded..\n"
     time.sleep(1)
     active_plugins = plugin.rpc.plugin_list()["plugins"]
-    response.append("Active plugins : "
-                    ", ".join(p["name"].split('/')[-1] for p in active_plugins))
-    return response
+    reply["response"] += "Active plugins : "\
+                         ", ".join(p["name"].split('/')[-1]
+                                   for p in active_plugins)
+    return reply
 
 
 @plugin.method("search_plugin", desc=search_description,
