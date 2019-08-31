@@ -17,7 +17,7 @@ def plug_debug(line):
     """
     Use $PWD/debug.log as stdout for print()-debugging a plugin
     """
-    with open(os.path.join(os.getcwd(), "debug.log"), "a") as f:
+    with open(os.path.join(os.getcwd(), "plugin_debug.log"), "a") as f:
         f.write(line)
 
 
@@ -57,7 +57,7 @@ def get_main_file(possible_filenames, install_path):
     # language, to check if there is the main one
     for filename in [f for f in content
                      if os.path.isfile(os.path.join(install_path, f))
-                     and not re.findall(r"^.*\.cpp|c|go$",
+                     and not re.findall(r"^.*\.cpp|\.c|\.go$",
                                         os.path.join(install_path, f))]:
         # FIXME: Improve main file detection
         for possible_filename in possible_filenames:
