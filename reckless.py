@@ -45,8 +45,8 @@ def install(plugin, url, main_file=None, install_dir=None):
     """
     # We dont support pre-v0.7.2.1 anyway
     reply = {"response": "", "format-hint": "simple"}
-    # We use the command return to give an output to the user
-    reply["response"] += "===== Installation result ======\n\n"
+    reply["response"] += "                                "
+    reply["response"] += "===== Installation log ======\n\n"
     # First of all, check that we have been given a supported url
     if url.split("://")[0] not in {"http", "https"}:
         reply["response"] += "You did not pass a valid url,"\
@@ -82,8 +82,8 @@ def install(plugin, url, main_file=None, install_dir=None):
     else:
         urllib.request.urlretrieve(url, file_path)
     # Separated because url and path can be long
-    reply["response"] += "Downloaded file from {} ..".format(url)
-    reply["response"] += ".. to {}\n".format(file_path)
+    reply["response"] += "Downloaded file from {}".format(url)
+    reply["response"] += " to {}\n".format(file_path)
     # If the file has been urlretrieved, it's either an archive or a single
     # file
     if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
@@ -115,14 +115,20 @@ def install(plugin, url, main_file=None, install_dir=None):
                              " anything executable\n"
         return reply
     plugin.rpc.plugin_start(os.path.abspath(main_file))
-    reply["response"] += "Reloaded plugins from lightningd\n"
+    plugin_short_name = main_file.split('/')[-1]
+    reply["response"] += "\n"
+    reply["response"] += "Started {}\n".format(plugin_short_name)
     reply["response"] += "Waiting for a second to check if the brand"\
-                         " new plugin has been loaded..\n"
+                         " new plugin has been loaded\n"
     time.sleep(1)
     active_plugins = plugin.rpc.plugin_list()["plugins"]
+    # Emphase the plugin just installed if in the list
     reply["response"] += "Active plugins : "\
-                         ", ".join(p["name"].split('/')[-1]
-                                   for p in active_plugins)
+                         + ", ".join("-->" + p["name"].split('/')[-1] + "<--" if
+                                     p["name"].split('/')[-1] in
+                                     plugin_short_name else
+                                     p["name"].split('/')[-1]
+                                     for p in active_plugins)
     return reply
 
 
