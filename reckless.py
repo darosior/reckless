@@ -114,21 +114,10 @@ def install(plugin, url, main_file=None, install_dir=None):
         reply["response"] += "Could not find a main file, hence not making"\
                              " anything executable\n"
         return reply
-    plugin.rpc.plugin_start(os.path.abspath(main_file))
-    plugin_short_name = main_file.split('/')[-1]
     reply["response"] += "\n"
-    reply["response"] += "Started {}\n".format(plugin_short_name)
-    reply["response"] += "Waiting for a second to check if the brand"\
-                         " new plugin has been loaded\n"
-    time.sleep(1)
-    active_plugins = plugin.rpc.plugin_list()["plugins"]
-    # Emphase the plugin just installed if in the list
-    reply["response"] += "Active plugins : "\
-                         + ", ".join("-->" + p["name"].split('/')[-1] + "<--" if
-                                     p["name"].split('/')[-1] in
-                                     plugin_short_name else
-                                     p["name"].split('/')[-1]
-                                     for p in active_plugins)
+    reply["response"] += "Started {}".format(main_file.split('/')[-1])
+    # FIXME: Make 'plugin start' synchronous lightningd side
+    plugin.rpc.plugin_start(os.path.abspath(main_file))
     return reply
 
 
