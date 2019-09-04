@@ -141,8 +141,8 @@ def handle_requirements(directory):
             with open(os.path.join(directory, filename), 'r') as f:
                 for line in f:
                     # Some requirements.txt have blank lines...
-                    if line.rstrip('\n'):
-                        pip_install(line.rstrip('\n'))
+                    if line not in {'\n', ' '}:
+                        pip_install(line)
 
 
 def handle_compilation(directory):
@@ -177,24 +177,22 @@ def pip_install(package):
     'pip' install a Python package if not already installed (likely, globally
     installed)
     """
-    try:
-        package_name = package.split("==")[0]
-        subprocess.check_output([sys.executable, "-m", "pip", "show",
-                                 package_name])
-        # We did not raise, package is installed
-        if "==" in package:
-            package_version = version.parse(package.split("==")[1])
-            installed_version = version.parse(importlib.
-                                              import_module(package_name)
-                                              .__version__)
-            if package_version > installed_version:
-                # Install the new version
-                raise
-    except:
-        # Check failed, the package is not installed
-        try:
+    # Raising an error here is vital because starting a plugin without its
+    # requirements installed will crash `lightningd`.
+    package_name = package.split("==")[0]
+    spec = importlib.util.find_spec(package_name)
+    if spec is None:
+        # MUST NOT fail
+        subprocess.check_output([sys.executable, "-m", "pip",
+                                 "install", package])
+    if "==" in package:
+        package_version = version.parse(package.split("==")[1])
+        installed_version = version.parse(importlib.
+                                          import_module(package_name)
+                                          .__version__)
+        if package_version > installed_version:
+            # MUST NOT fail
             subprocess.check_output([sys.executable, "-m", "pip",
                                      "install", package])
-        except:
-            # Requirement already satisfied
-            pass
+    spec = importlib.util.find_spec(package_name)
+    assert spec is not None

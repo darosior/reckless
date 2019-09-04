@@ -47,7 +47,7 @@ def install(plugin, url, main_file=None, install_dir=None):
     reply = {"response": "", "format-hint": "simple"}
     reply["response"] += "                                "
     reply["response"] += "===== Installation log ======\n\n"
-    # First of all, check that we have been given a supported url
+    # Check that we have been given a supported url
     if url.split("://")[0] not in {"http", "https"}:
         reply["response"] += "You did not pass a valid url,"\
                              " treating as a keyword\n"
