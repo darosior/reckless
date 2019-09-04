@@ -100,7 +100,8 @@ def dl_folder_from_github(install_path, url):
     """
     if not re.search(r"[api.github.com/repos/]+[/contents/]+", url):
         raise ValueError("Unsupported url")
-    json_content = json.load(urllib.request.urlopen(url))
+    json_string = urllib.request.urlopen(url).read().decode("utf-8")
+    json_content = json.loads(json_string)
     if not isinstance(json_content, list):
         if "submodule_git_url" in json_content:
             # For 'git@username:repo/' urls

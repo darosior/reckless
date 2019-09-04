@@ -18,14 +18,16 @@ def search_github(repos, keyword):
     for repo in repos:
         api_url = "https://api.github.com/repos/{}/git/trees/master"\
                   .format(repo)
-        content_list = json.load(urllib.request.urlopen(api_url))["tree"]
+        json_string = urllib.request.urlopen(api_url).read().decode("utf-8")
+        content_list = json.loads(json_string)["tree"]
         for f in content_list:
             if keyword in f["path"]:
                 if f["mode"] == "160000":
                     # This a submodule
-                    submodule_url = json.load(urllib.request.urlopen(
+                    json_string = urllib.request.urlopen(
                         "https://api.github.com/repos/{}/contents"
-                        .format(repo) + f["path"]))["submodule_git_url"]
+                        .format(repo) + f["path"]).read().decode("utf-8")
+                    submodule_url = json.loads(json_string)["submodule_git_url"]
                     url = {"url_human": submodule_url}
                 else:
                     url = {"url_human": "https://github.com/{}/tree/master/{}"
