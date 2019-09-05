@@ -32,7 +32,7 @@ def init(plugin, options, configuration):
 
 @plugin.method("install_plugin", desc=install_description,
                long_desc=install_long_description)
-def install(plugin, url, main_file=None, install_dir=None):
+def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     """
     Installs a plugin to the default plugins directory given an url.
     Could have been named 'my_little_dirty_function'.
@@ -53,6 +53,13 @@ def install(plugin, url, main_file=None, install_dir=None):
                              " treating as a keyword\n"
         search_result = search(plugin, url)
         if search_result:
+            if install_auto:
+                if len(search_result) > 1:
+                    reply["response"] += "I cannot install the plugin"\
+                                         " automatically since I found"\
+                                         " two of them. Continuing.\n\n"
+                else:
+                    return install(plugin, search_result[0]["url_download"])
             reply["response"] += "You can install {} by running : ".format(url)
             reply["response"] += "`lightning-cli install_plugin {}`\n"\
                                  .format(search_result[0]["url_download"])

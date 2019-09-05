@@ -15,7 +15,11 @@ install_long_description = \
         plugins repositories and return url of matching ones. It __will not__
         install it by default.\n
         \n
-        The `main_file` optional parameter can be passed to help me to find
+        The `install_auto` optional parameter, if set and if a keyword is
+        passed instead of an url, will make me install the plugin returned by
+        the search __if the search returns only one result__ : I can not
+        choose between plugins, maybe you should buy me an AI ?..
+        The `main_file` optional parameter can be passed to help me to find
         the plugin's directory main file.\n
         The `install_dir` optional parameter can be passed to change the name
         of created directory in the default plugins directory.\n
