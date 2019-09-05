@@ -180,6 +180,8 @@ def pip_install(package):
     # Raising an error here is vital because starting a plugin without its
     # requirements installed will crash `lightningd`.
     package_name = package.split("==")[0]
+    if ">=" in package:
+        package_name = package.split(">=")[0]
     spec = importlib.util.find_spec(package_name)
     if spec is None:
         # MUST NOT fail
