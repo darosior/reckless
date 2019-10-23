@@ -91,6 +91,7 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     # Separated because url and path can be long
     reply["response"] += "Downloaded file from {}".format(url)
     reply["response"] += " to {}\n".format(file_path)
+
     # If the file has been urlretrieved, it's either an archive or a single
     # file
     if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
@@ -108,6 +109,7 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     handle_requirements(install_path)
     # The case where the plugin is not written in a scripting language
     handle_compilation(install_path)
+
     # Trying to figure out which file to set executable, otherwise we would not
     # be able to load the plugin
     possible_filenames = {file_path.split('/')[-1].split('.')[0], "main",
@@ -122,9 +124,12 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
                              " anything executable\n"
         return reply
     reply["response"] += "\n"
-    reply["response"] += "Started {}".format(main_file.split('/')[-1])
-    # FIXME: Make 'plugin start' synchronous lightningd side
-    plugin.rpc.plugin_start(os.path.abspath(main_file))
+
+    active_plugins = plugin.rpc.plugin_start(os.path.abspath(main_file))
+    if main_file in [p["name"] for p in active_plugins["plugins"]]:
+        reply["response"] += "Started {}".format(main_file.split('/')[-1])
+    else:
+        reply["response"] += "Timeout while trying to start {}.".format(main_file)
     return reply
 
 
