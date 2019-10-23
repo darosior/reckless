@@ -189,12 +189,16 @@ def pip_install(package):
                                  "install", package])
     if "==" in package:
         package_version = version.parse(package.split("==")[1])
-        installed_version = version.parse(importlib.
-                                          import_module(package_name)
-                                          .__version__)
-        if package_version > installed_version:
-            # MUST NOT fail
-            subprocess.check_output([sys.executable, "-m", "pip",
-                                     "install", package])
+        try:
+            installed_version = version.parse(importlib.
+                                              import_module(package_name)
+                                              .__version__)
+            if package_version > installed_version:
+                # MUST NOT fail
+                subprocess.check_output([sys.executable, "-m", "pip",
+                                         "install", package])
+        except AttributeError:
+            # No __version__ ..
+            pass
     spec = importlib.util.find_spec(package_name)
     assert spec is not None
