@@ -38,10 +38,10 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     Could have been named 'my_little_dirty_function'.
 
     :param url: Where to fetch the plugin from.
-    :main_file: (optional) If the resource is a directory, specifies the
+    :main_file: If the resource is a directory, specifies the
                 file to make executable.
-    :install_dir: (optional) The name of the directory to create in c-lightning's
-                default plugins directory.
+    :install_dir: The name of the directory to create in c-lightning's
+                  default plugins directory.
     """
     # We dont support pre-v0.7.2.1 anyway
     reply = {"response": "", "format-hint": "simple"}
