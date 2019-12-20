@@ -177,8 +177,6 @@ def pip_install(package):
     'pip' install a Python package if not already installed (likely, globally
     installed)
     """
-    # Raising an error here is vital because starting a plugin without its
-    # requirements installed will crash `lightningd`.
     package_name = package.split("==")[0]
     if ">=" in package:
         package_name = package.split(">=")[0]
@@ -200,6 +198,3 @@ def pip_install(package):
         except AttributeError:
             # No __version__ ..
             pass
-    spec = importlib.util.find_spec(package_name)
-    if spec is None:
-        raise Exception("Could not pip install {}.".format(package_name))
