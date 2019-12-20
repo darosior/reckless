@@ -126,7 +126,7 @@ def dl_folder_from_github(install_path, url):
                                       url + i["name"] if url[:-1] == '/' else
                                       url + '/' + i["name"])
         # Unlikely
-        if "submodule_git_url" in i:
+        elif "submodule_git_url" in i:
             dl_github_repo(os.path.join(install_path, i["name"]),
                            json_content["submodule_git_url"])
 
@@ -201,4 +201,5 @@ def pip_install(package):
             # No __version__ ..
             pass
     spec = importlib.util.find_spec(package_name)
-    assert spec is not None
+    if spec is None:
+        raise Exception("Could not pip install {}.".format(package_name))
