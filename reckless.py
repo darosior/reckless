@@ -10,7 +10,7 @@ from descriptions import (
     install_description, install_long_description, search_description,
     search_long_description
 )
-from lightning import Plugin
+from pyln.client import Plugin
 from search import search_github
 from utils import (
     create_dir, get_main_file, dl_folder_from_github, make_executable,
