@@ -76,7 +76,7 @@ def dl_github_repo(install_path, url):
     url = url.replace(".git", "")
     # Let's download it as a zip
     dl_url = url + "archive/master.zip" if url[:-1] == '/' \
-                                        else url + '/' + "archive/master.zip"
+        else url + '/' + "archive/master.zip"
     zip_path, _ = urllib.request.urlretrieve(dl_url,
                                os.path.join(install_path, url.split("/")[-1]))
     with zipfile.ZipFile(zip_path, 'r') as zip_file:
@@ -150,26 +150,20 @@ def handle_compilation(directory):
     Handles the compilation of a GO/C/C++ plugin
     """
     content = os.listdir(directory)
+    # Simple case: there is a Makefile
+    for name in content:
+        if name == "Makefile":
+            subprocess.check_output(["make"])
+            return
+    # Otherwise we can still try to `go build` go plugins
     for filename in [name for name in content if '.' in name]:
         if filename.split('.')[1] == "go":
-            # Check for a Makefile otherwise `go build` it
-            for name in content:
-                if name == "Makefile":
-                    subprocess.check_output(["make"])
-                    return
             try:
                 go_bin = os.path.abspath("go")
                 subprocess.check_output([go_bin, "build"])
             except (FileNotFoundError, subprocess.CalledProcessError):
                 raise Exception("Could not 'go build' the plugin, is golang"
-                                "installed ?")
-            return
-        elif filename.split('.')[1] in {"c", "cpp"}:
-            # We need a Makefile
-            for name in content:
-                if name == "Makefile":
-                    subprocess.check_output(["make"])
-                    return
+                                " installed ?")
 
 
 def pip_install(package):
