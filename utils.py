@@ -1,6 +1,7 @@
 """
 Utility functions.
 """
+import base64
 import importlib
 import json
 import os
@@ -34,6 +35,15 @@ def make_executable(abs_path):
     Add the exec permission to a file
     """
     os.chmod(abs_path, os.stat(abs_path).st_mode | stat.S_IEXEC)
+
+
+def write_file(file_path, b64_string):
+    """
+    Creates a file and writes its content from a b64 string.
+    """
+    with open(file_path, 'w') as f:
+        content = base64.b64decode(b64_string)
+        f.write(content.decode("utf-8"))
 
 
 def get_main_file(possible_filenames, install_path):
@@ -73,22 +83,27 @@ def dl_github_repo(install_path, url):
     :param install_path: Where to clone the repo.
     :param url: Repo url.
     """
-    url = url.replace(".git", "")
-    # Let's download it as a zip
-    dl_url = url + "archive/master.zip" if url[:-1] == '/' \
-        else url + '/' + "archive/master.zip"
-    zip_path, _ = urllib.request.urlretrieve(dl_url,
-                               os.path.join(install_path, url.split("/")[-1]))
-    with zipfile.ZipFile(zip_path, 'r') as zip_file:
-        zip_file.extractall(install_path)
-    os.remove(zip_path)
-    # Remove extra dir (likely "<pluginname>-master")
-    if len(os.listdir(install_path)) == 1:
-        extra_dir = os.path.join(install_path, os.listdir(install_path)[0])
-        for name in os.listdir(extra_dir):
-            os.rename(os.path.join(extra_dir, name),
-                      os.path.join(install_path, name))
-        os.rmdir(extra_dir)
+    json_string = urllib.request.urlopen(url + "?recursive=1").read()
+    json_content = json.loads(json_string.decode("utf-8"))
+    for element in json_content["tree"]:
+        if element["path"][0] == '.':
+            continue
+        if element["mode"] == "040000":
+            # We'll handle subdir creation below
+            continue
+        abs_path = os.path.join(install_path, element["path"])
+        if len(element["path"].split('/')) > 1:
+            subdirs = "/".join(abs_path.split('/')[:-1])
+            os.makedirs(os.path.join(install_path, subdirs), exist_ok=True)
+        # Yeah, that __is__ a request inside a loop (max 5000 req/hour
+        # without authentication)
+        # FIXME: We could hit frontend instead ? Like raw.github.com
+        blob_json_string = urllib.request.urlopen(element["url"]).read()
+        blob_json = json.loads(blob_json_string.decode("utf-8"))
+        assert blob_json["encoding"] == "base64"
+        write_file(abs_path, blob_json["content"])
+        if element["mode"] == "100755":
+            make_executable(abs_path)
 
 
 def dl_folder_from_github(install_path, url):
@@ -104,18 +119,13 @@ def dl_folder_from_github(install_path, url):
     json_content = json.loads(json_string)
     if not isinstance(json_content, list):
         if "submodule_git_url" in json_content:
-            # For 'git@username:repo/' urls
-            repo_url = json_content["submodule_git_url"]
-            if "git@" in repo_url:
-                repo_url = repo_url.replace(":", "/")
-                repo_url = repo_url.replace("git@", "http://")
-            dl_github_repo(install_path, repo_url)
+            dl_github_repo(install_path, json_content["git_url"])
             return
         else:
             raise ValueError("Could not parse json: {}".format(json_content))
     for i in json_content:
         if "download_url" in i:
-            if i["download_url"]:
+            if i["download_url"] is not None:
                 dest = os.path.join(install_path, i["name"])
                 urllib.request.urlretrieve(i["download_url"], dest)
             # This is a folder
