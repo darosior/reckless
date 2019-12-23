@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+import json
 import os
-import tarfile
-import time
+import re
 import urllib.parse
 import urllib.request
-import zipfile
 
 from descriptions import (
     install_description, install_long_description, search_description,
@@ -14,7 +13,7 @@ from pyln.client import Plugin
 from search import search_github
 from utils import (
     create_dir, get_main_file, dl_folder_from_github, make_executable,
-    dl_github_repo, handle_requirements, handle_compilation, plug_debug
+    dl_github_repo, handle_requirements, handle_compilation
 )
 
 
@@ -71,6 +70,7 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
             reply["response"] += "No known plugin was found matching {}"\
                                  .format(url)
         return reply
+
     res_name = urllib.parse.urlparse(url).path.split('/')[-1]
     if not install_dir:
         install_dir = res_name.split('.')[0]
@@ -80,45 +80,44 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     file_path = os.path.join(install_path, res_name)
     if os.path.exists(file_path):
         return "Destination {} already exists\n".format(file_path)
+
     # A special case to handle repositories with many plugins as folders
+    # (Hello lightningd/plugins !)
     if "api.github.com" in url and len(res_name.split('.')) == 1:
+        assert re.match(r".*api.github.com/repos/.*/contents", url) is not None
+        *repo_url, folder_name = url.split('/')
         dl_folder_from_github(install_path, url)
+        # *The only* endpoint which has `mode` fields.. Required to make the
+        # right file executable
+        repo_url = '/'.join(repo_url)
+        repo_url = repo_url.replace("/contents",
+                                    "/git/trees/master?recursive=1")
+        json_repo = urllib.request.urlopen(repo_url).read()
+        repo_content = json.loads(json_repo.decode("utf-8"))
+        for element in repo_content["tree"]:
+            if element["path"].startswith(folder_name):
+                if element["mode"] == "100755":
+                    file_name = element["path"].split('/')[-1]
+                    file_path = os.path.join(install_path, file_name)
+                    make_executable(file_path)
     elif "github.com" in url:
         # A Github url, but not the api. Must be a repo.
         dl_github_repo(install_path, url)
     else:
         urllib.request.urlretrieve(url, file_path)
+        make_executable(file_path)
     # Separated because url and path can be long
-    reply["response"] += "Downloaded file from {}".format(url)
-    reply["response"] += " to {}\n".format(file_path)
+    reply["response"] += "Downloaded file from {} to {}\n".format(url, file_path)
 
-    # If the file has been urlretrieved, it's either an archive or a single
-    # file
-    if file_path.endswith(".tar.gz") or file_path.endswith("tar") \
-            or file_path.endswith(".zip"):
-        reply["response"] += "Extracting the archive {}\n".format(res_name)
-        if file_path.endswith(".tar.gz") or file_path.endswith("tar"):
-            with tarfile.open(file_path, "r:*") as tar_file:
-                tar_file.extractall(install_path)
-            os.remove(file_path)
-        elif file_path.endswith(".zip"):
-            with zipfile.ZipFile(file_path, "r") as zip_file:
-                zip_file.extractall(install_path)
-            os.remove(file_path)
     # The common case where the plugin is in Python and has dependencies
     handle_requirements(install_path)
     # The case where the plugin is not written in a scripting language
     handle_compilation(install_path)
 
-    # Trying to figure out which file to set executable, otherwise we would not
-    # be able to load the plugin
-    possible_filenames = {file_path.split('/')[-1].split('.')[0], "main",
-                          "plugin"}
-    main_file = get_main_file(possible_filenames, install_path)
-    # We might not have found the main_file...
-    if main_file:
-        reply["response"] += "Making {} executable\n".format(main_file)
-        make_executable(main_file)
+    # Finally get the executable file and make `lightningd` start it
+    main_file = get_main_file(install_path)
+    if main_file is not None:
+        reply["response"] += "Made {} executable\n".format(main_file)
     else:
         reply["response"] += "Could not find a main file, hence not making"\
                              " anything executable\n"

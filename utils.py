@@ -1,7 +1,6 @@
 """
 Utility functions.
 """
-import base64
 import importlib
 import json
 import os
@@ -10,7 +9,6 @@ import subprocess
 import stat
 import sys
 import urllib.request
-import zipfile
 from packaging import version
 
 
@@ -37,53 +35,32 @@ def make_executable(abs_path):
     os.chmod(abs_path, os.stat(abs_path).st_mode | stat.S_IEXEC)
 
 
-def write_file(file_path, b64_string):
+def get_main_file(dir_path):
     """
-    Creates a file and writes its content from a b64 string.
+    Returns the path to the first executable file of the provided directory
     """
-    with open(file_path, 'w+b') as f:
-        content = base64.b64decode(b64_string)
-        f.write(content)
-
-
-def get_main_file(possible_filenames, install_path):
-    """
-    Tries to detect the main file of a plugin directory
-    """
-    content = os.listdir(install_path)
-    if len(content) == 1:
-        tmp_file = os.path.join(install_path, content[0])
-        if not os.path.isdir(tmp_file):
-            # There is only one file, this is the main one !
-            return tmp_file
-        else:
-            # The archive actually contained a directory, let's clean it up
-            for f in os.listdir(tmp_file):
-                os.rename(os.path.join(tmp_file, f),
-                          os.path.join(install_path, f))
-            os.rmdir(tmp_file)
-            content = os.listdir(install_path)
-    # Iterate through all files that are not source files of a compiled
-    # language, to check if there is the main one
-    for filename in [f for f in content
-                     if os.path.isfile(os.path.join(install_path, f))
-                     and not re.findall(r"^.*\.cpp|\.c|\.go$",
-                                        os.path.join(install_path, f))]:
-        # FIXME: Improve main file detection
-        for possible_filename in possible_filenames:
-            if possible_filename in filename:
-                return os.path.join(install_path, filename)
+    content = os.listdir(dir_path)
+    for file in content:
+        abs_path = os.path.join(dir_path, file)
+        if os.access(abs_path, os.X_OK):
+            return abs_path
     return None
 
 
-def dl_github_repo(install_path, url):
+def dl_github_repo(install_path, api_url, html_url):
     """
-    Downloads a whole Github repo, then delete the '.git' directory.
+    Downloads all files from a Github repo, uses the frontend as much as
+    possible in order to minimize API requests.
 
-    :param install_path: Where to clone the repo.
-    :param url: Repo url.
+    :param install_path: Where to "clone" the repo.
+    :param api_url: Github repo API url, of the form
+                    `repos/<owner>/<repo>/git/trees/<sha>`.
+    :param html_url: Github frontend repo url, of the form
+                     `<owner>/<repo>/tree/<sha>`.
     """
-    json_string = urllib.request.urlopen(url + "?recursive=1").read()
+    html_url = html_url.replace("//github.com", "//raw.githubusercontent.com")
+    html_url = html_url.replace("/tree/", '/')
+    json_string = urllib.request.urlopen(api_url + "?recursive=1").read()
     json_content = json.loads(json_string.decode("utf-8"))
     for element in json_content["tree"]:
         if element["path"][0] == '.':
@@ -91,17 +68,14 @@ def dl_github_repo(install_path, url):
         if element["mode"] == "040000":
             # We'll handle subdir creation below
             continue
+        elif element["mode"] == "160000":
+            # FIXME: Support submoduleception
+            raise Exception("I don't support submodule inside a submodule")
         abs_path = os.path.join(install_path, element["path"])
         if len(element["path"].split('/')) > 1:
             subdirs = "/".join(abs_path.split('/')[:-1])
             os.makedirs(os.path.join(install_path, subdirs), exist_ok=True)
-        # Yeah, that __is__ a request inside a loop (max 5000 req/hour
-        # without authentication)
-        # FIXME: We could hit frontend instead ? Like raw.github.com
-        blob_json_string = urllib.request.urlopen(element["url"]).read()
-        blob_json = json.loads(blob_json_string.decode("utf-8"))
-        assert blob_json["encoding"] == "base64"
-        write_file(abs_path, blob_json["content"])
+        urllib.request.urlretrieve(html_url + '/' + element["path"], abs_path)
         if element["mode"] == "100755":
             make_executable(abs_path)
 
@@ -119,7 +93,8 @@ def dl_folder_from_github(install_path, url):
     json_content = json.loads(json_string)
     if not isinstance(json_content, list):
         if "submodule_git_url" in json_content:
-            dl_github_repo(install_path, json_content["git_url"])
+            dl_github_repo(install_path, json_content["git_url"],
+                           json_content["html_url"])
             return
         else:
             raise ValueError("Could not parse json: {}".format(json_content))
@@ -138,7 +113,8 @@ def dl_folder_from_github(install_path, url):
         # Unlikely
         elif "submodule_git_url" in i:
             dl_github_repo(os.path.join(install_path, i["name"]),
-                           json_content["submodule_git_url"])
+                           json_content["submodule_git_url"],
+                           json_content["html_url"])
 
 
 def handle_requirements(directory):
