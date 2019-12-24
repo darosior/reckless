@@ -38,6 +38,8 @@ def install(plugin, url, install_auto=None, install_dir=None):
     :install_dir: The name of the directory to create in c-lightning's
                   default plugins directory.
     """
+    # `lightningd` sets umask to 0 !
+    os.umask(22)
     # We dont support pre-v0.7.2.1 anyway
     reply = {"response": "", "format-hint": "simple"}
     reply["response"] += "                                "
