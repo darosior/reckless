@@ -19,7 +19,7 @@ def plug_debug(line):
     Use $PWD/debug.log as stdout for print()-debugging a plugin
     """
     with open(os.path.join(os.getcwd(), "plugin_debug.log"), "a") as f:
-        f.write(line)
+        f.write(line + '\n')
 
 
 def create_dir(abs_path):

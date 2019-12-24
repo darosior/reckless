@@ -82,10 +82,12 @@ def install(plugin, url, install_auto=None, install_dir=None):
     if "api.github.com" in url and len(res_name.split('.')) == 1:
         install_folder_from_github(install_path, url)
     elif "github.com" in url:
-        *base, owner, repo = url
+        if "/tree/" not in url:
+            url += "/tree/master"
+        *_, owner, repo, _, tree = url.split('/')
         api_endpoint = "https://api.github.com"
-        api_url = "{}/repos/{}/{}/git/trees/master".format(api_endpoint,
-                                                           owner, repo)
+        api_url = "{}/repos/{}/{}/git/trees/{}".format(api_endpoint, owner,
+                                                       repo, tree)
         dl_github_repo(install_path, api_url, url)
     else:
         urllib.request.urlretrieve(url, file_path)
