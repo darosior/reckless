@@ -29,14 +29,12 @@ def init(plugin, options, configuration):
 
 @plugin.method("install_plugin", desc=install_description,
                long_desc=install_long_description)
-def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
+def install(plugin, url, install_auto=None, install_dir=None):
     """
     Installs a plugin to the default plugins directory given an url.
     Could have been named 'my_little_dirty_function'.
 
     :param url: Where to fetch the plugin from.
-    :main_file: If the resource is a directory, specifies the
-                file to make executable.
     :install_dir: The name of the directory to create in c-lightning's
                   default plugins directory.
     """
