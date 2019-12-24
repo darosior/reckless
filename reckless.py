@@ -69,6 +69,7 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
                                  .format(url)
         return reply
 
+    # Create the plugin directory..
     res_name = urllib.parse.urlparse(url).path.split('/')[-1]
     if not install_dir:
         install_dir = res_name.split('.')[0]
@@ -79,17 +80,20 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     if os.path.exists(file_path):
         return "Destination {} already exists\n".format(file_path)
 
-    # A special case to handle repositories with many plugins as folders
-    # (Hello lightningd/plugins !)
+    # .. Then download it
     if "api.github.com" in url and len(res_name.split('.')) == 1:
         install_folder_from_github(install_path, url)
     elif "github.com" in url:
-        # A Github url, but not the api. Must be a repo.
-        dl_github_repo(install_path, url)
+        *base, owner, repo = url
+        api_endpoint = "https://api.github.com"
+        api_url = "{}/repos/{}/{}/git/trees/master".format(api_endpoint,
+                                                           owner, repo)
+        dl_github_repo(install_path, api_url, url)
     else:
         urllib.request.urlretrieve(url, file_path)
         make_executable(file_path)
-    reply["response"] += "Downloaded file from {} to {}\n".format(url, file_path)
+    reply["response"] += "Downloaded file from {} to {}\n".format(url,
+                                                                  file_path)
 
     # The common case where the plugin is in Python and has dependencies
     handle_requirements(install_path)
