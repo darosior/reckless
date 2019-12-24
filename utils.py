@@ -2,6 +2,8 @@
 Utility functions.
 """
 import importlib
+# importlib quirks....
+import importlib.util
 import json
 import os
 import re
