@@ -27,7 +27,7 @@ def create_dir(abs_path):
     Creates a directory
     """
     if not os.path.isdir(abs_path):
-        subprocess.call(["mkdir", "-p", abs_path])
+        os.makedirs(abs_path)
 
 
 def make_executable(abs_path):
