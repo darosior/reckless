@@ -37,3 +37,10 @@ def test_install_submodule(node_factory):
     urls = l1.rpc.call("search_plugin", {"keyword": "lightning-qt"})[0]
     l1.rpc.call("install_plugin", {"url": urls["url_download"]})
     l1.rpc.check("gui")
+
+
+def test_install_repo(node_factory):
+    l1 = node_factory.get_node(options={"plugin": plugin_path})
+    repo_url = "https://github.com/darosior/lightning-qt"
+    l1.rpc.call("install_plugin", {"url": repo_url})
+    l1.rpc.check("gui")
