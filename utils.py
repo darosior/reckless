@@ -117,6 +117,33 @@ def dl_folder_from_github(install_path, url):
                            json_content["html_url"])
 
 
+def install_folder_from_github(install_path, url):
+    """
+    This downloads the plugin folder from a repository, and makes the suitable
+    file executable.
+
+    :param install_path: Where to store the folder.
+    :param url: Github API url of the form
+                `api.github.com/repos/<owner>/<repo>/contents`.
+    """
+    assert re.match(r".*api.github.com/repos/.*/contents", url) is not None
+    *repo_url, folder_name = url.split('/')
+    dl_folder_from_github(install_path, url)
+    # *The only* endpoint which has `mode` fields.. Required to make the
+    # right file executable
+    repo_url = '/'.join(repo_url)
+    repo_url = repo_url.replace("/contents",
+                                "/git/trees/master?recursive=1")
+    json_repo = urllib.request.urlopen(repo_url).read()
+    repo_content = json.loads(json_repo.decode("utf-8"))
+    for element in repo_content["tree"]:
+        if element["path"].startswith(folder_name):
+            if element["mode"] == "100755":
+                file_name = element["path"].split('/')[-1]
+                file_path = os.path.join(install_path, file_name)
+                make_executable(file_path)
+
+
 def handle_requirements(directory):
     """
     Handles the 'pip install's if this is a Python plugin (most are).

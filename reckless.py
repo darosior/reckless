@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-import json
 import os
-import re
 import urllib.parse
 import urllib.request
 
@@ -12,8 +10,8 @@ from descriptions import (
 from pyln.client import Plugin
 from search import search_github
 from utils import (
-    create_dir, get_main_file, dl_folder_from_github, make_executable,
-    dl_github_repo, handle_requirements, handle_compilation
+    create_dir, get_main_file, make_executable, dl_github_repo,
+    handle_requirements, handle_compilation, install_folder_from_github
 )
 
 
@@ -63,7 +61,7 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
             reply["response"] += "`lightning-cli install_plugin {}`\n"\
                                  .format(search_result[0]["url_download"])
             if len(search_result) > 1:
-                reply["response"] += "You can also install it via :"
+                reply["response"] += "You can also install it via: "
                 reply["response"] += ", ".join(r["url_download"]
                                                for r in search_result[1:])
         else:
@@ -84,29 +82,13 @@ def install(plugin, url, install_auto=None, main_file=None, install_dir=None):
     # A special case to handle repositories with many plugins as folders
     # (Hello lightningd/plugins !)
     if "api.github.com" in url and len(res_name.split('.')) == 1:
-        assert re.match(r".*api.github.com/repos/.*/contents", url) is not None
-        *repo_url, folder_name = url.split('/')
-        dl_folder_from_github(install_path, url)
-        # *The only* endpoint which has `mode` fields.. Required to make the
-        # right file executable
-        repo_url = '/'.join(repo_url)
-        repo_url = repo_url.replace("/contents",
-                                    "/git/trees/master?recursive=1")
-        json_repo = urllib.request.urlopen(repo_url).read()
-        repo_content = json.loads(json_repo.decode("utf-8"))
-        for element in repo_content["tree"]:
-            if element["path"].startswith(folder_name):
-                if element["mode"] == "100755":
-                    file_name = element["path"].split('/')[-1]
-                    file_path = os.path.join(install_path, file_name)
-                    make_executable(file_path)
+        install_folder_from_github(install_path, url)
     elif "github.com" in url:
         # A Github url, but not the api. Must be a repo.
         dl_github_repo(install_path, url)
     else:
         urllib.request.urlretrieve(url, file_path)
         make_executable(file_path)
-    # Separated because url and path can be long
     reply["response"] += "Downloaded file from {} to {}\n".format(url, file_path)
 
     # The common case where the plugin is in Python and has dependencies
