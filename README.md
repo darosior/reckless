@@ -24,19 +24,18 @@ to `lightning_install` to install the actual plugin. For example the
 @renepickhardt's rebalance-JIT-routing (WIP).
 
 You can install a plugin by providing an url, or a keyword and setting the optional second
-parameter to `true`:
+parameter to `true`, for example:
 ```bash
-# The `1` is an optional and reckless argument which downloads and start directly a plugin.
-$ lnreg1 install_plugin lightning-qt true
+$ lightning-cli install_plugin lightning-qt true
 ```
 This will output a somewhat exhaustive log of what happened (in case installation goes wrong,
 or so that you know what this plugin does with your money-related software):
 ```bash
                                 ===== Installation log ======
 
-Created /home/darosior/projects/reckless/regtest/lndir1/plugins/lightning-qt directory
-Downloaded file from https://api.github.com/repos/lightningd/plugins/contents/lightning-qt to /home/darosior/projects/reckless/regtest/lndir1/plugins/lightning-qt/lightning-qt
-Making /home/darosior/projects/reckless/regtest/lndir1/plugins/lightning-qt/lightning-qt.py executable
+Created /home/darosior/projects/reckless/regtest/lndir1/regtest/plugins/lightning-qt directory
+Downloaded file from https://api.github.com/repos/lightningd/plugins/contents/lightning-qt to /home/darosior/projects/reckless/regtest/lndir1/regtest/plugins/lightning-qt/lightning-qt
+Made /home/darosior/projects/reckless/regtest/lndir1/regtest/plugins/lightning-qt/lightning-qt.py executable
 
 Started lightning-qt.py
 ```
