@@ -201,9 +201,11 @@ def pip_install(package):
                                               import_module(package_name)
                                               .__version__)
             if package_version > installed_version:
-                # MUST NOT fail
                 subprocess.check_output([sys.executable, "-m", "pip",
                                          "install", package])
         except AttributeError:
             # No __version__ ..
+            pass
+        except ModuleNotFoundError:
+            # If the package name is different from the module name
             pass
