@@ -44,3 +44,22 @@ def test_install_repo(node_factory):
     repo_url = "https://github.com/darosior/lightning-qt"
     l1.rpc.call("install_plugin", {"url": repo_url})
     l1.rpc.check("gui")
+
+
+def test_install_everyone(node_factory):
+    l1 = node_factory.get_node()
+    l1.rpc.plugin_start(plugin_path)
+    # autopilot, autoreload are static
+    # FIXME: intall Go and add graphql, sitzprobe
+    l1.rpc.call("install_plugin", {"url": "monitor", "install_auto": True})
+    l1.rpc.call("install_plugin", {"url": "persistent-channels",
+                                   "install_auto": True})
+    l1.rpc.call("install_plugin", {"url": "summary", "install_auto": True})
+    probe_url = "https://api.github.com/repos/lightningd/plugins/contents/probe"
+    l1.rpc.call("install_plugin", {"url": probe_url})
+    rebalance_url = "https://api.github.com/repos/lightningd/plugins/contents/rebalance"
+    l1.rpc.call("install_plugin", {"url": rebalance_url})
+    l1.rpc.call("install_plugin", {"url": "sendinvoiceless",
+                                   "install_auto": True})
+    l1.rpc.call("install_plugin", {"url": "summary", "install_auto": True})
+    l1.rpc.call("install_plugin", {"url": "zmq", "install_auto": True})
